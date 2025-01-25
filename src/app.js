@@ -30,7 +30,12 @@ app.get("/user", async (req, res) => {
       res.send(user);
     }
 
-   
+    // const users = await User.find({ emailId: userEmail });
+    // if (users.length === 0) {
+    //   res.status(404).send("User not found");
+    // } else {
+    //   res.send(users);
+    // }
   } catch (err) {
     res.status(400).send("Something went wrong ");
   }
@@ -66,11 +71,12 @@ app.patch("/user", async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
+      runValidators: true,
     });
     console.log(user);
     res.send("User updated successfully");
   } catch (err) {
-    res.status(400).send("Something went wrong ");
+    res.status(400).send("UPDATE FAILED:" + err.message);
   }
 });
 

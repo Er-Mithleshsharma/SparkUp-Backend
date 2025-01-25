@@ -1,4 +1,4 @@
-# DevTinder APIs
+# SPARKUP APIs
 
 ## authRouter
 - POST /signup
