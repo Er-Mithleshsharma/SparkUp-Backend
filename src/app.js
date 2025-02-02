@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 app.use(
   cors({
-    origin: "http://localhost:5174",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -30,7 +30,7 @@ connectDB()
     app.listen(7777, () => {
       console.log("Server is successfully listening on port 7777...");
     });
-  })
+  }) 
   .catch((err) => {
     console.error("Database cannot be connected!!");
   });
