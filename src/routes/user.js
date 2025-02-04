@@ -64,21 +64,22 @@ userRouter.get("/feed", userAuth, async (req, res) => {
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
 
+    // Fetch all connection requests (pending, accepted, rejected, interested)
     const connectionRequests = await ConnectionRequest.find({
       $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
-    }).select("fromUserId  toUserId");
+    }).select("fromUserId toUserId");
 
-    const hideUsersFromFeed = new Set();
+    // Create a Set to store users to be excluded
+    const hideUsersFromFeed = new Set([String(loggedInUser._id)]); // Add logged-in user to prevent self in feed
+
     connectionRequests.forEach((req) => {
-      hideUsersFromFeed.add(req.fromUserId.toString());
-      hideUsersFromFeed.add(req.toUserId.toString());
+      hideUsersFromFeed.add(String(req.fromUserId));
+      hideUsersFromFeed.add(String(req.toUserId));
     });
 
+    // Fetch users not in the connection list
     const users = await User.find({
-      $and: [
-        { _id: { $nin: Array.from(hideUsersFromFeed) } },
-        { _id: { $ne: loggedInUser._id } },
-      ],
+      _id: { $nin: Array.from(hideUsersFromFeed) }, // Exclude all connected users
     })
       .select(USER_SAFE_DATA)
       .skip(skip)
@@ -89,4 +90,5 @@ userRouter.get("/feed", userAuth, async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
+
 module.exports = userRouter;

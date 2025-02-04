@@ -1,10 +1,9 @@
 const express = require("express");
 const requestRouter = express.Router();
-
+const { sendFriendRequestEmail } = require("../utils/sendEmail");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
-
 requestRouter.post(
   "/request/send/:status/:toUserId",
   userAuth,
@@ -25,7 +24,7 @@ requestRouter.post(
       if (!toUser) {
         return res.status(404).json({ message: "User not found!" });
       }
-
+              
       const existingConnectionRequest = await ConnectionRequest.findOne({
         $or: [
           { fromUserId, toUserId },
@@ -43,8 +42,20 @@ requestRouter.post(
         toUserId,
         status,
       });
-
+       
       const data = await connectionRequest.save();
+      // const emailRes = await sendEmail.run(
+      //   "A new friend request from " + req.user.firstName,
+      //   req.user.firstName + " is " + status + " in " + toUser.firstName
+      // );
+      const user = await User.findById(toUserId);
+
+      sendFriendRequestEmail(user.emailId,req.user.firstName );
+
+
+
+
+      console.log(sendFriendRequestEmail);
 
       res.json({
         message:
