@@ -4,6 +4,7 @@ const authRouter = express.Router();
 const { validateSignUpData } = require("../utils/validation");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const { sendWelcomeEmail } = require("../utils/sendEmail");
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -14,7 +15,6 @@ authRouter.post("/signup", async (req, res) => {
 
     // Encrypt the password
     const passwordHash = await bcrypt.hash(password, 10);
-    console.log(passwordHash);
 
     //   Creating a new instance of the User model
     const user = new User({
@@ -32,8 +32,19 @@ authRouter.post("/signup", async (req, res) => {
     });
 
     res.json({ message: "User Added successfully!", data: savedUser });
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(emailId, firstName).catch(() => {});
   } catch (err) {
-    res.status(400).send("ERROR : " + err.message);
+    // Handle duplicate email error
+    if (err.code === 11000) {
+      return res.status(400).send("An account with this email already exists. Please login instead.");
+    }
+    // Handle validation errors
+    if (err.name === "ValidationError") {
+      const messages = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).send(messages[0]);
+    }
+    res.status(400).send(err.message);
   }
 });
 
@@ -58,7 +69,7 @@ authRouter.post("/login", async (req, res) => {
       throw new Error("Invalid credentials");
     }
   } catch (err) {
-    res.status(400).send("ERROR : " + err.message);
+    res.status(400).send("Invalid email or password. Please try again.");
   }
 });
 

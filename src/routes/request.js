@@ -1,6 +1,6 @@
 const express = require("express");
 const requestRouter = express.Router();
-const { sendFriendRequestEmail } = require("../utils/sendEmail");
+const { sendFriendRequestEmail, sendMatchEmail } = require("../utils/sendEmail");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
@@ -95,6 +95,15 @@ requestRouter.post(
       connectionRequest.status = status;
 
       const data = await connectionRequest.save();
+
+      // Send match email if accepted
+      if (status === "accepted") {
+        const fromUser = await User.findById(connectionRequest.fromUserId);
+        if (fromUser) {
+          sendMatchEmail(fromUser.emailId, loggedInUser.firstName).catch(() => {});
+          sendMatchEmail(loggedInUser.emailId, fromUser.firstName).catch(() => {});
+        }
+      }
 
       res.json({ message: "Connection request " + status, data });
     } catch (err) {

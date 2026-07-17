@@ -4,8 +4,9 @@ const userRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
+const Block = require("../models/block");
 
-const USER_SAFE_DATA = "firstName lastName photoUrl age gender about skills";
+const USER_SAFE_DATA = "firstName lastName photoUrl age gender about skills isPremium membershipType";
 
 // Get all the pending connection request for the loggedIn user
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
@@ -70,11 +71,21 @@ userRouter.get("/feed", userAuth, async (req, res) => {
     }).select("fromUserId toUserId");
 
     // Create a Set to store users to be excluded
-    const hideUsersFromFeed = new Set([String(loggedInUser._id)]); // Add logged-in user to prevent self in feed
+    const hideUsersFromFeed = new Set([String(loggedInUser._id)]);
 
     connectionRequests.forEach((req) => {
       hideUsersFromFeed.add(String(req.fromUserId));
       hideUsersFromFeed.add(String(req.toUserId));
+    });
+
+    // Also exclude blocked users (both directions)
+    const blocks = await Block.find({
+      $or: [{ blockedBy: loggedInUser._id }, { blockedUser: loggedInUser._id }],
+    }).select("blockedBy blockedUser");
+
+    blocks.forEach((block) => {
+      hideUsersFromFeed.add(String(block.blockedBy));
+      hideUsersFromFeed.add(String(block.blockedUser));
     });
 
     // Fetch users not in the connection list

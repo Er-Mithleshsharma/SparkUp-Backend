@@ -11,6 +11,21 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    seen: {
+      type: Boolean,
+      default: false,
+    },
+    replyTo: {
+      messageId: { type: mongoose.Schema.Types.ObjectId },
+      text: { type: String },
+      firstName: { type: String },
+    },
+    reactions: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        emoji: { type: String },
+      },
+    ],
   },
   { timestamps: true }
 );
