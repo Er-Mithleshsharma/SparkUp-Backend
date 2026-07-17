@@ -6,9 +6,10 @@ const cors = require("cors");
 const http = require("http");
 const rateLimit = require("express-rate-limit");
 
+// TODO: restrict to specific origins in production
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: true,
     credentials: true,
   })
 ); 

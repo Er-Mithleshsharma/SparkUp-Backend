@@ -10,9 +10,10 @@ const getSecretRoomId = (userId, targetUserId) => {
 };
 
 const initializeSocket = (server) => {
+  // TODO: restrict to specific origins in production
   const io = socket(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: true,
     },
   });
 
